@@ -1,24 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Home, Mail, Lock, ArrowRight, CheckCircle, Key } from 'lucide-react';
 
 export default function AuthPage() {
-  const router = useRouter();
-  const [showTopAuth, setShowTopAuth] = useState<'signup' | 'login' | null>(null);
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
-  const handleAuth = async (type: 'signup' | 'login') => {
-    setError('');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
+    setError('');
+
+    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
 
     try {
-      const res = await fetch(`/api/auth/${type}`, {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -27,237 +29,136 @@ export default function AuthPage() {
       const data = await res.json();
 
       if (data.success) {
-        // Store user info in localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
-        // Redirect to homepage
         router.push('/home');
       } else {
-        setError(data.error);
+        setError(data.error || 'Something went wrong');
       }
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      setError('Failed to connect to server');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Top Navigation Bar */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            MyApp
-          </h1>
-          <div className="flex gap-3">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-900">
+      {/* Dynamic Aesthetic Background Image */}
+      <div 
+        className="absolute inset-0 z-0 opacity-40 transition-opacity duration-1000"
+        style={{
+          backgroundImage: 'url("https://images.unsplash.com/photo-1560448204-603b3fc33ddc?q=80&w=2070")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 via-transparent to-black/60 z-0" />
+
+      <main className="relative z-10 w-full max-w-5xl grid lg:grid-cols-2 gap-0 shadow-2xl rounded-3xl overflow-hidden m-4 border border-white/10">
+        
+        {/* Left Side: Aesthetic Brand Section */}
+        <div className="hidden lg:flex flex-col justify-between bg-blue-600/20 backdrop-blur-xl p-12 text-white border-r border-white/10">
+          <div>
+            <div className="flex items-center gap-2 mb-8">
+              <div className="bg-white p-2 rounded-lg">
+                <Home className="text-blue-600" size={24} />
+              </div>
+              <span className="font-bold text-xl tracking-tight uppercase">Premium Rentals</span>
+            </div>
+            
+            <h1 className="text-6xl font-black italic leading-tight tracking-tighter mb-6">
+              Bhara <br /> 
+              <span className="text-blue-400">Chai?</span>
+            </h1>
+            <p className="text-lg text-blue-100/80 leading-relaxed max-w-xs">
+              Your gateway to the most aesthetic living spaces in the city.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 text-sm font-medium bg-white/5 p-3 rounded-xl border border-white/10">
+              <CheckCircle size={18} className="text-green-400" />
+              Verified Owners & Properties
+            </div>
+            <div className="flex items-center gap-3 text-sm font-medium bg-white/5 p-3 rounded-xl border border-white/10">
+              <Key size={18} className="text-yellow-400" />
+              Easy Move-in Process
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Elegant Auth Form */}
+        <div className="bg-white p-8 md:p-16 flex flex-col justify-center">
+          <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
+            <Home className="text-blue-600" size={28} />
+            <h1 className="text-3xl font-black text-blue-600 italic tracking-tighter">Bhara Chai?</h1>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+              {isLogin ? 'Welcome back' : 'Start your journey'}
+            </h2>
+            <p className="text-gray-500 mt-2">
+              {isLogin ? 'Login to manage your rentals' : 'Find your dream home in minutes'}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Email</label>
+              <div className="group relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={18} />
+                <input
+                  type="email"
+                  required
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-600/20 transition-all text-gray-800 placeholder-gray-300"
+                  placeholder="name@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Password</label>
+              <div className="group relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={18} />
+                <input
+                  type="password"
+                  required
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-600/20 transition-all text-gray-800 placeholder-gray-300"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {error && <p className="text-red-500 text-sm font-medium bg-red-50 p-3 rounded-xl">{error}</p>}
+
             <button
-              onClick={() => setShowTopAuth('signup')}
-              className="px-6 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition font-medium"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-200 flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] disabled:opacity-50"
             >
-              Sign Up
+              {loading ? 'Wait a moment...' : isLogin ? 'Sign In' : 'Join Now'}
+              <ArrowRight size={20} />
             </button>
+          </form>
+
+          <div className="mt-10 text-center">
+            <span className="text-gray-400 text-sm">
+              {isLogin ? "Don't have an account?" : "Already a member?"}
+            </span>
             <button
-              onClick={() => setShowTopAuth('login')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              onClick={() => setIsLogin(!isLogin)}
+              className="ml-2 text-blue-600 font-bold hover:underline decoration-2 underline-offset-4"
             >
-              Log In
+              {isLogin ? 'Create one' : 'Sign in here'}
             </button>
           </div>
         </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="pt-24 pb-12 px-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Hero Section */}
-          {!showTopAuth && (
-            <div className="text-center mb-16">
-              <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Welcome to Your App
-              </h2>
-              <p className="text-xl text-gray-600 mb-12">
-                Manage your tasks, boost productivity, and achieve your goals
-              </p>
-
-              {/* Large Center Options */}
-              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {/* Get Started Card */}
-                <div
-                  onClick={() => setShowTopAuth('signup')}
-                  className="group cursor-pointer bg-white p-10 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-blue-500"
-                >
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <ArrowRight className="w-10 h-10 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3 text-gray-800">Get Started</h3>
-                  <p className="text-gray-600 mb-6">
-                    Create a new account and start your journey with us
-                  </p>
-                  <div className="inline-flex items-center text-blue-600 font-semibold group-hover:gap-2 transition-all">
-                    Sign Up Now
-                    <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-
-                {/* Login Card */}
-                <div
-                  onClick={() => setShowTopAuth('login')}
-                  className="group cursor-pointer bg-white p-10 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-purple-500"
-                >
-                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Lock className="w-10 h-10 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3 text-gray-800">
-                    I Already Have an Account
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Welcome back! Log in to continue where you left off
-                  </p>
-                  <div className="inline-flex items-center text-purple-600 font-semibold group-hover:gap-2 transition-all">
-                    Log In Now
-                    <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Auth Form (appears when button is clicked) */}
-          {showTopAuth && (
-            <div className="max-w-md mx-auto">
-              <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
-                <button
-                  onClick={() => {
-                    setShowTopAuth(null);
-                    setError('');
-                  }}
-                  className="text-gray-500 hover:text-gray-700 mb-4"
-                >
-                  ← Back
-                </button>
-
-                <h3 className="text-3xl font-bold mb-2 text-gray-800">
-                  {showTopAuth === 'signup' ? 'Create Account' : 'Welcome Back'}
-                </h3>
-                <p className="text-gray-600 mb-8">
-                  {showTopAuth === 'signup'
-                    ? 'Sign up to get started'
-                    : 'Log in to your account'}
-                </p>
-
-                {error && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleAuth(showTopAuth);
-                  }}
-                  className="space-y-6"
-                >
-                  {/* Email Input */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                        placeholder="you@example.com"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password Input */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        minLength={6}
-                        className="w-full pl-11 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                        placeholder="••••••••"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-5 h-5" />
-                        ) : (
-                          <Eye className="w-5 h-5" />
-                        )}
-                      </button>
-                    </div>
-                    <p className="mt-2 text-sm text-gray-500">
-                      Must be at least 6 characters
-                    </p>
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading
-                      ? 'Please wait...'
-                      : showTopAuth === 'signup'
-                      ? 'Create Account'
-                      : 'Log In'}
-                  </button>
-                </form>
-
-                {/* Toggle Auth Type */}
-                <div className="mt-6 text-center text-sm text-gray-600">
-                  {showTopAuth === 'signup' ? (
-                    <>
-                      Already have an account?{' '}
-                      <button
-                        onClick={() => {
-                          setShowTopAuth('login');
-                          setError('');
-                        }}
-                        className="text-blue-600 hover:underline font-semibold"
-                      >
-                        Log In
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      Don't have an account?{' '}
-                      <button
-                        onClick={() => {
-                          setShowTopAuth('signup');
-                          setError('');
-                        }}
-                        className="text-blue-600 hover:underline font-semibold"
-                      >
-                        Sign Up
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
